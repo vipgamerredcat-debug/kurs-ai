@@ -24,18 +24,20 @@
 <button class="tile" onclick="openApp('progress')"><div class="ico">📊</div><b>Postępy</b><small>Twój wynik nauki</small></button></section></main>
 <div id="workspace" class="hidden"><div class="window"><div class="win-head"><span id="winTitle">English Center</span><button class="close" onclick="closeApp()">✕</button></div><div class="win-body" id="winBody"></div></div></div>
 <nav class="taskbar hidden" id="taskbar"><button onclick="closeApp()">⊞ Start</button><button onclick="openApp('sentences')">💬 Zdania</button><button onclick="openApp('test')">📝 Test</button><button onclick="signOut()">⏻ Wyloguj</button></nav>
-<script type="module">
+<script>
 // Firebase jest ładowany dopiero po kliknięciu logowania Google.
 // Dzięki temu tryb demonstracyjny działa również bez konfiguracji Firebase.
 const firebaseConfig={apiKey:"TU_WKLEJ_API_KEY",authDomain:"TU_WKLEJ_PROJECT_ID.firebaseapp.com",projectId:"TU_WKLEJ_PROJECT_ID",appId:"TU_WKLEJ_APP_ID"};
 let auth=null, firebaseSignOut=null, firebaseSdk=null;
 const configured=!firebaseConfig.apiKey.startsWith("TU_");
-const $=id=>document.getElementById(id);let xp=+(localStorage.getItem("ec_xp")||0),done=+(localStorage.getItem("ec_done")||0);
-function updateStats(){$("points").textContent=xp+" XP";$("done").textContent=done}updateStats();
-$("googleBtn").onclick=async()=>{if(!configured){$("loginError").textContent="Logowanie Google nie jest jeszcze skonfigurowane. Wejdź przez tryb demonstracyjny.";return}try{if(!firebaseSdk){const appSdk=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const authSdk=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");firebaseSdk={...appSdk,...authSdk};auth=firebaseSdk.getAuth(firebaseSdk.initializeApp(firebaseConfig));firebaseSignOut=firebaseSdk.signOut;firebaseSdk.onAuthStateChanged(auth,user=>{if(user)enterDesktop(user.displayName||user.email)})}await firebaseSdk.signInWithPopup(auth,new firebaseSdk.GoogleAuthProvider())}catch(e){$("loginError").textContent="Błąd logowania: "+e.message}};
+const $=id=>document.getElementById(id);
 function enterDesktop(label){$("login").classList.add("hidden");$("desktop").classList.remove("hidden");$("taskbar").classList.remove("hidden");$("userLabel").textContent=label;$("loginError").textContent=""}
-$("guestBtn").onclick=()=>enterDesktop("Tryb demonstracyjny");
-
+// Rejestrujemy wejście demonstracyjne jako pierwszą akcję — nie zależy od Firebase ani pamięci przeglądarki.
+$("guestBtn").addEventListener("click",()=>enterDesktop("Tryb demonstracyjny"));
+let xp=0,done=0;
+try{xp=+(localStorage.getItem("ec_xp")||0);done=+(localStorage.getItem("ec_done")||0)}catch(e){}
+function updateStats(){const p=$("points"),d=$("done");if(p)p.textContent=xp+" XP";if(d)d.textContent=done}updateStats();
+$("googleBtn").onclick=async()=>{if(!configured){$("loginError").textContent="Logowanie Google nie jest jeszcze skonfigurowane. Wejdź przez tryb demonstracyjny.";return}try{if(!firebaseSdk){const appSdk=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const authSdk=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");firebaseSdk={...appSdk,...authSdk};auth=firebaseSdk.getAuth(firebaseSdk.initializeApp(firebaseConfig));firebaseSignOut=firebaseSdk.signOut;firebaseSdk.onAuthStateChanged(auth,user=>{if(user)enterDesktop(user.displayName||user.email)})}await firebaseSdk.signInWithPopup(auth,new firebaseSdk.GoogleAuthProvider())}catch(e){$("loginError").textContent="Błąd logowania: "+e.message}};
 window.signOut=()=>{if(auth&&firebaseSignOut)firebaseSignOut(auth);else enterDesktop("Tryb demonstracyjny")};window.closeApp=()=> $("workspace").classList.add("hidden");
 const sentences=[["I am learning English.","Uczę się angielskiego."],["Could you help me, please?","Czy możesz mi pomóc?"],["What time does the lesson start?","O której zaczyna się lekcja?"],["I don't understand this word.","Nie rozumiem tego słowa."],["I'm looking forward to the weekend.","Nie mogę się doczekać weekendu."]];
 const words=[["apple","jabłko"],["beautiful","piękny / piękna"],["although","chociaż"],["improve","ulepszać / poprawiać"],["journey","podróż"],["knowledge","wiedza"]];
