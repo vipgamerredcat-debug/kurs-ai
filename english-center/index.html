@@ -33,7 +33,9 @@ let auth=null;const configured=!firebaseConfig.apiKey.startsWith("TU_");if(confi
 const $=id=>document.getElementById(id);let xp=+(localStorage.getItem("ec_xp")||0),done=+(localStorage.getItem("ec_done")||0);
 function updateStats(){$("points").textContent=xp+" XP";$("done").textContent=done}updateStats();
 $("googleBtn").onclick=async()=>{if(!auth){$("loginError").textContent="Administrator strony musi najpierw skonfigurować Firebase.";return}try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){$("loginError").textContent="Błąd logowania: "+e.message}};
-function enterDesktop(label){$("login").classList.add("hidden");$("desktop").classList.remove("hidden");$("taskbar").classList.remove("hidden");$("userLabel").textContent=label;$("loginError").textContent=""}\n$("guestBtn").onclick=()=>enterDesktop("Tryb demonstracyjny");\nif(auth)onAuthStateChanged(auth,user=>{if(user){enterDesktop(user.displayName||user.email)}else{$("login").classList.remove("hidden");$("desktop").classList.add("hidden");$("taskbar").classList.add("hidden")}});
+function enterDesktop(label){$("login").classList.add("hidden");$("desktop").classList.remove("hidden");$("taskbar").classList.remove("hidden");$("userLabel").textContent=label;$("loginError").textContent=""}
+$("guestBtn").onclick=()=>enterDesktop("Tryb demonstracyjny");
+if(auth)onAuthStateChanged(auth,user=>{if(user){enterDesktop(user.displayName||user.email)}else{$("login").classList.remove("hidden");$("desktop").classList.add("hidden");$("taskbar").classList.add("hidden")}});
 window.signOut=()=>auth&&firebaseSignOut(auth);window.closeApp=()=> $("workspace").classList.add("hidden");
 const sentences=[["I am learning English.","Uczę się angielskiego."],["Could you help me, please?","Czy możesz mi pomóc?"],["What time does the lesson start?","O której zaczyna się lekcja?"],["I don't understand this word.","Nie rozumiem tego słowa."],["I'm looking forward to the weekend.","Nie mogę się doczekać weekendu."]];
 const words=[["apple","jabłko"],["beautiful","piękny / piękna"],["although","chociaż"],["improve","ulepszać / poprawiać"],["journey","podróż"],["knowledge","wiedza"]];
