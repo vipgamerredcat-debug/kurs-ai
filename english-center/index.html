@@ -25,18 +25,18 @@
 <div id="workspace" class="hidden"><div class="window"><div class="win-head"><span id="winTitle">English Center</span><button class="close" onclick="closeApp()">✕</button></div><div class="win-body" id="winBody"></div></div></div>
 <nav class="taskbar hidden" id="taskbar"><button onclick="closeApp()">⊞ Start</button><button onclick="openApp('sentences')">💬 Zdania</button><button onclick="openApp('test')">📝 Test</button><button onclick="signOut()">⏻ Wyloguj</button></nav>
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut as firebaseSignOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-// Wstaw konfigurację aplikacji WWW z Firebase Console.
+// Firebase jest ładowany dopiero po kliknięciu logowania Google.
+// Dzięki temu tryb demonstracyjny działa również bez konfiguracji Firebase.
 const firebaseConfig={apiKey:"TU_WKLEJ_API_KEY",authDomain:"TU_WKLEJ_PROJECT_ID.firebaseapp.com",projectId:"TU_WKLEJ_PROJECT_ID",appId:"TU_WKLEJ_APP_ID"};
-let auth=null;const configured=!firebaseConfig.apiKey.startsWith("TU_");if(configured){auth=getAuth(initializeApp(firebaseConfig));}
+let auth=null, firebaseSignOut=null, firebaseSdk=null;
+const configured=!firebaseConfig.apiKey.startsWith("TU_");
 const $=id=>document.getElementById(id);let xp=+(localStorage.getItem("ec_xp")||0),done=+(localStorage.getItem("ec_done")||0);
 function updateStats(){$("points").textContent=xp+" XP";$("done").textContent=done}updateStats();
-$("googleBtn").onclick=async()=>{if(!auth){$("loginError").textContent="Administrator strony musi najpierw skonfigurować Firebase.";return}try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){$("loginError").textContent="Błąd logowania: "+e.message}};
+$("googleBtn").onclick=async()=>{if(!configured){$("loginError").textContent="Logowanie Google nie jest jeszcze skonfigurowane. Wejdź przez tryb demonstracyjny.";return}try{if(!firebaseSdk){const appSdk=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const authSdk=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");firebaseSdk={...appSdk,...authSdk};auth=firebaseSdk.getAuth(firebaseSdk.initializeApp(firebaseConfig));firebaseSignOut=firebaseSdk.signOut;firebaseSdk.onAuthStateChanged(auth,user=>{if(user)enterDesktop(user.displayName||user.email)})}await firebaseSdk.signInWithPopup(auth,new firebaseSdk.GoogleAuthProvider())}catch(e){$("loginError").textContent="Błąd logowania: "+e.message}};
 function enterDesktop(label){$("login").classList.add("hidden");$("desktop").classList.remove("hidden");$("taskbar").classList.remove("hidden");$("userLabel").textContent=label;$("loginError").textContent=""}
 $("guestBtn").onclick=()=>enterDesktop("Tryb demonstracyjny");
-if(auth)onAuthStateChanged(auth,user=>{if(user){enterDesktop(user.displayName||user.email)}else{$("login").classList.remove("hidden");$("desktop").classList.add("hidden");$("taskbar").classList.add("hidden")}});
-window.signOut=()=>auth&&firebaseSignOut(auth);window.closeApp=()=> $("workspace").classList.add("hidden");
+
+window.signOut=()=>{if(auth&&firebaseSignOut)firebaseSignOut(auth);else enterDesktop("Tryb demonstracyjny")};window.closeApp=()=> $("workspace").classList.add("hidden");
 const sentences=[["I am learning English.","Uczę się angielskiego."],["Could you help me, please?","Czy możesz mi pomóc?"],["What time does the lesson start?","O której zaczyna się lekcja?"],["I don't understand this word.","Nie rozumiem tego słowa."],["I'm looking forward to the weekend.","Nie mogę się doczekać weekendu."]];
 const words=[["apple","jabłko"],["beautiful","piękny / piękna"],["although","chociaż"],["improve","ulepszać / poprawiać"],["journey","podróż"],["knowledge","wiedza"]];
 const questions=[{q:"She ___ to school every day.",a:["go","goes","going"],c:1,why:"Dla he/she/it w Present Simple dodajemy -s."},{q:"Jak przetłumaczyć „usually”?",a:["nigdy","zwykle","rzadko"],c:1,why:"Usually oznacza „zwykle”."},{q:"They ___ playing football now.",a:["is","am","are"],c:2,why:"Dla they używamy are."},{q:"Przeciwieństwo słowa „expensive” to:",a:["cheap","easy","strong"],c:0,why:"Cheap oznacza tani."},{q:"I have lived here ___ 2020.",a:["for","since","during"],c:1,why:"Since podaje moment rozpoczęcia."}];
